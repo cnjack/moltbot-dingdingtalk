@@ -27,7 +27,7 @@ clawdbot send --channel dingtalk --to <conversationId> "Hello from CLI"
 
 1. Install the plugin:
    ```bash
-   npm install moltbot-dingtalk-stream
+   moltbot plugins install moltbot-dingtalk-stream
    ```
 
 2. Configure in your moltbot config:
