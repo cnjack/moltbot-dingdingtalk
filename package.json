@@ -1,6 +1,6 @@
 {
   "name": "moltbot-dingtalk-stream",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "DingTalk custom channel plugin for Moltbot/Clawdbot",
   "main": "dist/index.js",
   "clawdbot": {
@@ -22,10 +22,11 @@
     "channel",
     "chatbot"
   ],
-  "author": "Your Name",
+  "author": "Jack",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.0",
+    "clawdbot": "^2026.1.24",
     "dingtalk-stream": "^2.1.4"
   },
   "devDependencies": {
