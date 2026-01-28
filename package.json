@@ -1,5 +1,5 @@
 {
-  "name": "@moltbot/dingtalk-channel",
+  "name": "moltbot-dingtalk-stream",
   "version": "1.0.1",
   "description": "DingTalk custom channel plugin for Moltbot/Clawdbot",
   "main": "dist/index.js",

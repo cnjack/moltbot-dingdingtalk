@@ -158,7 +158,6 @@ const dingTalkChannelPlugin = {
                                     return;
                                 }
                                 try {
-                                    console.log(`[DingTalk] Sending reply to webhook: ${replyWebhook} Content: ${text.substring(0, 20)}...`);
                                     await axios_1.default.post(replyWebhook, {
                                         msgtype: "text",
                                         text: { content: text }
@@ -173,7 +172,6 @@ const dingTalkChannelPlugin = {
                             const dispatcher = {
                                 sendFinalReply: (payload) => {
                                     const text = payload.text || payload.content || '';
-                                    ctx.log?.info?.(`[${accountId}] sendFinalReply called. Text length: ${text?.length}`);
                                     sendToDingTalk(text).catch(e => ctx.log?.error?.(`[${accountId}] sendToDingTalk failed: ${e}`));
                                     return true;
                                 },
@@ -205,7 +203,7 @@ const dingTalkChannelPlugin = {
                             await dispatchPromise;
                             // If final reply wasn't called but we have buffer (streaming case where agent didn't return final payload?)
                             if (!replySent && replyBuffer) {
-                                console.log(`[DingTalk] sending accumulated buffer from blocks.`);
+                                ctx.log?.info?.(`[${accountId}] Sending accumulated buffer from blocks (len=${replyBuffer.length}).`);
                                 await sendToDingTalk(replyBuffer);
                             }
                         }
