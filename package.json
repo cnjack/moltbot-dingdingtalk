@@ -1,8 +1,13 @@
 {
   "name": "moltbot-dingtalk-stream",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "DingTalk custom channel plugin for Moltbot/Clawdbot",
   "main": "dist/index.js",
+  "clawdbot": {
+    "extensions": [
+      "./dist/index.js"
+    ]
+  },
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
@@ -26,12 +31,5 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0"
-  },
-  "clawdbot": {
-    "extensions": {
-      "channels": [
-        "./dist/index.js"
-      ]
-    }
   }
 }
