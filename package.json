@@ -1,6 +1,6 @@
 {
   "name": "@moltbot/dingtalk-channel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DingTalk custom channel plugin for Moltbot/Clawdbot",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
