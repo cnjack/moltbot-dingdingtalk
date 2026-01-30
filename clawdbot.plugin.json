@@ -1,7 +1,7 @@
 {
   "id": "moltbot-dingtalk-stream",
   "name": "DingTalk Stream Channel",
-  "version": "1.0.8",
+  "version": "1.0.0",
   "description": "Custom channel for integrating Moltbot with DingTalk (Stream Mode)",
   "author": "Jack",
   "license": "MIT",
