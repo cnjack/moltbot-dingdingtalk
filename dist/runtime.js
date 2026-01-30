@@ -39,16 +39,18 @@ const dingtalkRuntime = {
                         msgtype: "text",
                         text: { content: text },
                     };
-                    // Use markdown format for media (DingTalk text messages don't support embedded images)
-                    if (opts.mediaUrl) {
+                    // Use markdown format for tool calls, media, or when explicitly requested
+                    if (opts.markdown || opts.mediaUrl) {
                         payload.msgtype = "markdown";
+                        const markdownText = opts.mediaUrl
+                            ? `${text}\n\n![image](${opts.mediaUrl})`
+                            : text;
                         payload.markdown = {
                             title: "Message",
-                            text: `${text}\n\n![image](${opts.mediaUrl})`,
+                            text: markdownText,
                         };
                         delete payload.text;
                     }
-                    console.log(`[DingTalk] Sending to webhook: ${webhook.substring(0, 50)}...`);
                     await axios_1.default.post(webhook, payload, {
                         headers: { "Content-Type": "application/json" },
                         timeout: 10000,

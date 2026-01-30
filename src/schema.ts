@@ -4,6 +4,9 @@ import type { z } from "zod";
 export const CHANNEL_ID = "moltbot-dingtalk-stream";
 export const DEFAULT_ACCOUNT_ID = "default";
 
+// Verbose level type
+export type VerboseLevel = "off" | "on" | "full";
+
 // DingTalk account configuration interface
 export interface DingTalkAccountConfig {
   enabled?: boolean;
@@ -19,6 +22,11 @@ export interface DingTalkAccountConfig {
     policy?: "open" | "pairing" | "allowlist";
     allowFrom?: string[];
   };
+  // Verbose level: controls tool call information display
+  // - "off": don't show tool calls (default)
+  // - "on": show tool summaries  
+  // - "full": show tool summaries + output
+  verboseLevel?: VerboseLevel;
 }
 
 // Resolved account with computed fields
@@ -30,6 +38,7 @@ export interface ResolvedDingTalkAccount {
   clientId: string;
   clientSecret: string;
   tokenSource: "config" | "env" | "none";
+  verboseLevel: VerboseLevel;
   config: DingTalkAccountConfig;
 }
 
@@ -46,6 +55,11 @@ export interface DingTalkChannelConfig {
     policy?: "open" | "pairing" | "allowlist";
     allowFrom?: string[];
   };
+  // Verbose level: controls tool call information display
+  // - "off": don't show tool calls (default)
+  // - "on": show tool summaries  
+  // - "full": show tool summaries + output
+  verboseLevel?: VerboseLevel;
   accounts?: Record<string, DingTalkAccountConfig>;
 }
 
@@ -72,6 +86,7 @@ export const DingTalkConfigSchema = {
     name: { type: "string" as const },
     groupPolicy: { type: "string" as const, enum: ["open", "allowlist"] },
     requireMention: { type: "boolean" as const },
+    verboseLevel: { type: "string" as const, enum: ["off", "on", "full"] },
     dm: {
       type: "object" as const,
       properties: {
@@ -89,6 +104,7 @@ export const DingTalkConfigSchema = {
           clientSecret: { type: "string" as const },
           webhookUrl: { type: "string" as const },
           name: { type: "string" as const },
+          verboseLevel: { type: "string" as const, enum: ["off", "on", "full"] },
         },
         required: ["clientId", "clientSecret"],
       },
@@ -177,6 +193,7 @@ export function resolveDingTalkAccount(opts: {
     clientSecret: config.clientSecret || "",
     tokenSource,
     config,
+    verboseLevel: config.verboseLevel ?? channelConfig?.verboseLevel ?? "off",
   };
 }
 

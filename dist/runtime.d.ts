@@ -70,6 +70,13 @@ export interface ClawdbotCoreRuntime {
                         kind: string;
                     }) => void;
                 };
+                replyOptions?: {
+                    verboseLevel?: "off" | "on" | "full";
+                    onToolResult?: (payload: {
+                        text?: string;
+                        mediaUrls?: string[];
+                    }) => Promise<void>;
+                };
             }) => Promise<void>;
         };
         session: {
@@ -115,6 +122,7 @@ export interface DingTalkRuntime {
             sendMessage: (target: string, text: string, opts?: {
                 accountId?: string;
                 mediaUrl?: string;
+                markdown?: boolean;
             }) => Promise<{
                 ok: boolean;
                 error?: string;

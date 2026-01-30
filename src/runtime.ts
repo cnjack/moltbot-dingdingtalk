@@ -50,6 +50,10 @@ export interface ClawdbotCoreRuntime {
           deliver: (payload: { text?: string; content?: string }) => Promise<void>;
           onError?: (err: unknown, info: { kind: string }) => void;
         };
+        replyOptions?: {
+          verboseLevel?: "off" | "on" | "full";
+          onToolResult?: (payload: { text?: string; mediaUrls?: string[] }) => Promise<void>;
+        };
       }) => Promise<void>;
     };
     session: {
@@ -93,7 +97,7 @@ export interface DingTalkRuntime {
       sendMessage: (
         target: string,
         text: string,
-        opts?: { accountId?: string; mediaUrl?: string }
+        opts?: { accountId?: string; mediaUrl?: string; markdown?: boolean }
       ) => Promise<{ ok: boolean; error?: string }>;
       probe: (
         clientId: string,
@@ -151,17 +155,19 @@ const dingtalkRuntime: DingTalkRuntime = {
             text: { content: text },
           };
 
-          // Use markdown format for media (DingTalk text messages don't support embedded images)
-          if (opts.mediaUrl) {
+          // Use markdown format for tool calls, media, or when explicitly requested
+          if (opts.markdown || opts.mediaUrl) {
             payload.msgtype = "markdown";
+            const markdownText = opts.mediaUrl 
+              ? `${text}\n\n![image](${opts.mediaUrl})`
+              : text;
             payload.markdown = {
               title: "Message",
-              text: `${text}\n\n![image](${opts.mediaUrl})`,
+              text: markdownText,
             };
             delete payload.text;
           }
 
-          console.log(`[DingTalk] Sending to webhook: ${webhook.substring(0, 50)}...`);
           await axios.post(webhook, payload, {
             headers: { "Content-Type": "application/json" },
             timeout: 10000,

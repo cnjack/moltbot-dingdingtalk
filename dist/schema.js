@@ -22,6 +22,7 @@ exports.DingTalkConfigSchema = {
         name: { type: "string" },
         groupPolicy: { type: "string", enum: ["open", "allowlist"] },
         requireMention: { type: "boolean" },
+        verboseLevel: { type: "string", enum: ["off", "on", "full"] },
         dm: {
             type: "object",
             properties: {
@@ -39,6 +40,7 @@ exports.DingTalkConfigSchema = {
                     clientSecret: { type: "string" },
                     webhookUrl: { type: "string" },
                     name: { type: "string" },
+                    verboseLevel: { type: "string", enum: ["off", "on", "full"] },
                 },
                 required: ["clientId", "clientSecret"],
             },
@@ -118,6 +120,7 @@ function resolveDingTalkAccount(opts) {
         clientSecret: config.clientSecret || "",
         tokenSource,
         config,
+        verboseLevel: config.verboseLevel ?? channelConfig?.verboseLevel ?? "off",
     };
 }
 function resolveDefaultDingTalkAccountId(cfg) {

@@ -59,13 +59,6 @@ interface Dispatcher {
   getQueuedCounts: () => { active: number; queued: number; final: number };
 }
 
-interface DispatchOptions {
-  ctx: InboundContext;
-  cfg: ClawdbotConfig;
-  dispatcher: Dispatcher;
-  replyOptions: Record<string, unknown>;
-}
-
 interface GatewayContext {
   account: ResolvedDingTalkAccount;
   cfg: ClawdbotConfig;
@@ -588,8 +581,6 @@ export const dingtalkPlugin: ChannelPlugin = {
             }
           };
 
-          log?.info?.(`[${accountId}] Using dispatchReplyWithBufferedBlockDispatcher`);
-
           await core.channel.reply.dispatchReplyWithBufferedBlockDispatcher({
             ctx: finalizedCtx,
             cfg,
@@ -597,6 +588,37 @@ export const dingtalkPlugin: ChannelPlugin = {
               deliver: deliverDingTalkReply,
               onError: (err, info) => {
                 log?.error?.(`[${accountId}] DingTalk ${info.kind} reply failed: ${String(err)}`);
+              },
+            },
+            replyOptions: {
+              verboseLevel: account.verboseLevel,
+              onToolResult: async (payload: { text?: string; mediaUrls?: string[] }) => {
+                const text = payload.text || "";
+                if (!text) return;
+                
+                // Format tool result for better readability in DingTalk
+                let formattedText = text;
+                
+                // Check if this is a tool output (contains newlines after the tool name)
+                // Format: "🛠️ Exec: command\noutput..."
+                const toolOutputMatch = text.match(/^(🛠️\s*\w+:\s*[^\n]+)\n([\s\S]+)$/);
+                if (toolOutputMatch && toolOutputMatch[1] && toolOutputMatch[2]) {
+                  const toolHeader = toolOutputMatch[1];
+                  const toolOutput = toolOutputMatch[2];
+                  // Wrap the output in a code block for better formatting
+                  formattedText = `${toolHeader}\n\`\`\`\n${toolOutput.trim()}\n\`\`\``;
+                }
+                
+                const result = await getDingTalkRuntime().channel.dingtalk.sendMessage(convoId, formattedText, {
+                  accountId,
+                  markdown: true,
+                });
+
+                if (result.ok) {
+                  statusSink?.({ lastOutboundAt: Date.now() });
+                } else {
+                  log?.error?.(`[${accountId}] Failed to send tool result: ${result.error}`);
+                }
               },
             },
           });

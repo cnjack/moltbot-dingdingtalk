@@ -1,5 +1,6 @@
 export declare const CHANNEL_ID = "moltbot-dingtalk-stream";
 export declare const DEFAULT_ACCOUNT_ID = "default";
+export type VerboseLevel = "off" | "on" | "full";
 export interface DingTalkAccountConfig {
     enabled?: boolean;
     clientId?: string;
@@ -12,6 +13,7 @@ export interface DingTalkAccountConfig {
         policy?: "open" | "pairing" | "allowlist";
         allowFrom?: string[];
     };
+    verboseLevel?: VerboseLevel;
 }
 export interface ResolvedDingTalkAccount {
     accountId: string;
@@ -21,6 +23,7 @@ export interface ResolvedDingTalkAccount {
     clientId: string;
     clientSecret: string;
     tokenSource: "config" | "env" | "none";
+    verboseLevel: VerboseLevel;
     config: DingTalkAccountConfig;
 }
 export interface DingTalkChannelConfig {
@@ -35,6 +38,7 @@ export interface DingTalkChannelConfig {
         policy?: "open" | "pairing" | "allowlist";
         allowFrom?: string[];
     };
+    verboseLevel?: VerboseLevel;
     accounts?: Record<string, DingTalkAccountConfig>;
 }
 export interface ClawdbotConfig {
@@ -72,6 +76,10 @@ export declare const DingTalkConfigSchema: {
         requireMention: {
             type: "boolean";
         };
+        verboseLevel: {
+            type: "string";
+            enum: string[];
+        };
         dm: {
             type: "object";
             properties: {
@@ -106,6 +114,10 @@ export declare const DingTalkConfigSchema: {
                     };
                     name: {
                         type: "string";
+                    };
+                    verboseLevel: {
+                        type: "string";
+                        enum: string[];
                     };
                 };
                 required: string[];
