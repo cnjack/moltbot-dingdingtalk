@@ -1,4 +1,4 @@
-# DingTalk Channel for Clawdbot
+# DingTalk Channel for Clawdbot(OpenClaw/Moltbot)
 
 A Clawdbot channel plugin for DingTalk (钉钉) using **Stream Mode** for seamless integration.
 
