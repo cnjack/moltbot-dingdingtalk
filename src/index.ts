@@ -1,5 +1,11 @@
 import { DWClient } from "dingtalk-stream";
-import { getDingTalkRuntime, type OpenClawCoreRuntime } from "./runtime.ts";
+import { 
+  getDingTalkRuntime, 
+  extractMessageContent,
+  type OpenClawCoreRuntime,
+  type MessageContent,
+  type MediaFile,
+} from "./runtime.ts";
 import {
   CHANNEL_ID,
   DEFAULT_ACCOUNT_ID,
@@ -47,6 +53,10 @@ interface InboundContext {
   ConversationLabel?: string;
   OriginatingChannel?: string;
   OriginatingTo?: string;
+  // Media message fields
+  MediaPath?: string;
+  MediaType?: string;
+  MediaUrl?: string;
 }
 
 interface Dispatcher {
@@ -462,18 +472,24 @@ export const dingtalkPlugin: ChannelPlugin = {
       const handleMessage = async (res: { data: string; headers?: { messageId?: string } }) => {
         try {
           const message = JSON.parse(res.data);
-          const textContent = message.text?.content || "";
           const senderId = message.senderId;
           const convoId = message.conversationId;
 
-          log?.info?.(`[${accountId}] Received message from ${message.senderNick || senderId}: ${textContent}`);
+          // Extract message content (supports text, picture, audio, video, file, richText)
+          const messageContent = extractMessageContent(message);
+          const messageTypeLabel = messageContent.messageType !== "text" 
+            ? ` [${messageContent.messageType}]` 
+            : "";
+
+          log?.info?.(`[${accountId}] Received${messageTypeLabel} from ${message.senderNick || senderId}: ${messageContent.text.slice(0, 50)}...`);
 
           statusSink?.({ lastInboundAt: Date.now() });
 
-          if (!textContent) return;
+          // Allow media messages even if text is a placeholder like "[图片]"
+          if (!messageContent.text && !messageContent.mediaDownloadCode) return;
 
-          const rawBody = textContent;
-          const cleanedText = textContent.replace(/@\S+\s*/g, "").trim();
+          const rawBody = messageContent.text;
+          const cleanedText = messageContent.text.replace(/@\S+\s*/g, "").trim();
 
           const chatType = String(message.conversationType) === "2" ? "group" : "direct";
 
@@ -499,14 +515,47 @@ export const dingtalkPlugin: ChannelPlugin = {
             },
           }) ?? { agentId: "main", sessionKey: `dingtalk:${convoId}`, accountId };
 
+          // Download media if present
+          let mediaPath: string | undefined;
+          let mediaMimeType: string | undefined;
+          if (messageContent.mediaDownloadCode && account.robotCode) {
+            log?.info?.(`[${accountId}] Downloading ${messageContent.mediaType || "media"}...`);
+            const media = await getDingTalkRuntime().channel.dingtalk.downloadMedia(
+              account.clientId,
+              account.clientSecret,
+              account.robotCode,
+              messageContent.mediaDownloadCode
+            );
+            if (media) {
+              mediaPath = media.path;
+              mediaMimeType = media.mimeType;
+              log?.info?.(`[${accountId}] Media downloaded: ${mediaPath}`);
+            } else {
+              log?.warn?.(`[${accountId}] Failed to download media`);
+            }
+          }
+
+          // Build body text including media info
+          let bodyText = cleanedText;
+          if (mediaPath && messageContent.mediaType) {
+            const mediaTypeLabels: Record<string, string> = {
+              image: "图片",
+              audio: "语音",
+              video: "视频",
+              file: messageContent.fileName || "文件",
+            };
+            const label = mediaTypeLabels[messageContent.mediaType] || messageContent.mediaType;
+            bodyText = `[${label}: ${mediaPath}]\n${cleanedText}`.trim();
+          }
+
           const envelopeOptions = core.channel.reply.resolveEnvelopeFormatOptions?.(cfg) ?? {};
           const body = core.channel.reply.formatAgentEnvelope?.({
             channel: "DingTalk",
             from: message.senderNick ?? message.senderId,
             timestamp: message.createAt,
             envelope: envelopeOptions,
-            body: cleanedText,
-          }) ?? cleanedText;
+            body: bodyText,
+          }) ?? bodyText;
 
           const ctxPayload: InboundContext = {
             Body: body,
@@ -528,6 +577,10 @@ export const dingtalkPlugin: ChannelPlugin = {
             GroupSubject: chatType === "group" ? convoId : undefined,
             OriginatingChannel: CHANNEL_ID,
             OriginatingTo: chatType === "group" ? `dingtalk:channel:${convoId}` : `dingtalk:user:${senderId}`,
+            // Media fields
+            MediaPath: mediaPath,
+            MediaType: mediaMimeType,
+            MediaUrl: mediaPath, // Local path as URL for now
           };
 
           const finalizedCtx = core.channel.reply.finalizeInboundContext(ctxPayload);

@@ -10,6 +10,7 @@ export interface DingTalkAccountConfig {
   enabled?: boolean;
   clientId?: string;
   clientSecret?: string;
+  robotCode?: string; // Robot code for media download (usually same as clientId)
   webhookUrl?: string;
   name?: string;
   // Group settings
@@ -35,6 +36,7 @@ export interface ResolvedDingTalkAccount {
   configured: boolean;
   clientId: string;
   clientSecret: string;
+  robotCode?: string; // Robot code for media download
   tokenSource: "config" | "env" | "none";
   verboseLevel: VerboseLevel;
   config: DingTalkAccountConfig;
@@ -45,6 +47,7 @@ export interface DingTalkChannelConfig {
   enabled?: boolean;
   clientId?: string;
   clientSecret?: string;
+  robotCode?: string; // Robot code for media download (usually same as clientId)
   webhookUrl?: string;
   name?: string;
   groupPolicy?: "open" | "allowlist";
@@ -80,6 +83,7 @@ export const DingTalkConfigSchema = {
     enabled: { type: "boolean" as const },
     clientId: { type: "string" as const },
     clientSecret: { type: "string" as const },
+    robotCode: { type: "string" as const },
     webhookUrl: { type: "string" as const },
     name: { type: "string" as const },
     groupPolicy: { type: "string" as const, enum: ["open", "allowlist"] },
@@ -100,6 +104,7 @@ export const DingTalkConfigSchema = {
           enabled: { type: "boolean" as const },
           clientId: { type: "string" as const },
           clientSecret: { type: "string" as const },
+          robotCode: { type: "string" as const },
           webhookUrl: { type: "string" as const },
           name: { type: "string" as const },
           verboseLevel: { type: "string" as const, enum: ["off", "on", "full"] },
@@ -153,6 +158,7 @@ export function resolveDingTalkAccount(opts: {
         enabled: channelConfig.enabled,
         clientId: channelConfig.clientId,
         clientSecret: channelConfig.clientSecret,
+        robotCode: channelConfig.robotCode,
         webhookUrl: channelConfig.webhookUrl,
         name: channelConfig.name,
         groupPolicy: channelConfig.groupPolicy,
@@ -168,6 +174,7 @@ export function resolveDingTalkAccount(opts: {
         enabled: true,
         clientId: process.env.DINGTALK_CLIENT_ID,
         clientSecret: process.env.DINGTALK_CLIENT_SECRET,
+        robotCode: process.env.DINGTALK_ROBOT_CODE,
         webhookUrl: process.env.DINGTALK_WEBHOOK_URL,
       };
       tokenSource = "env";
@@ -181,6 +188,8 @@ export function resolveDingTalkAccount(opts: {
   }
 
   const config = accountConfig || { clientId: "", clientSecret: "" };
+  // robotCode defaults to clientId if not explicitly set
+  const robotCode = config.robotCode || config.clientId;
 
   return {
     accountId,
@@ -189,6 +198,7 @@ export function resolveDingTalkAccount(opts: {
     configured: Boolean(config.clientId?.trim() && config.clientSecret?.trim()),
     clientId: config.clientId || "",
     clientSecret: config.clientSecret || "",
+    robotCode: robotCode || undefined,
     tokenSource,
     config,
     verboseLevel: config.verboseLevel ?? channelConfig?.verboseLevel ?? "off",

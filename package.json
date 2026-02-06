@@ -1,6 +1,6 @@
 {
   "name": "moltbot-dingtalk-stream",
-  "version": "1.0.10",
+  "version": "1.1.0",
   "description": "DingTalk custom channel plugin for Moltbot/OpenClaw",
   "type": "module",
   "openclaw": {
